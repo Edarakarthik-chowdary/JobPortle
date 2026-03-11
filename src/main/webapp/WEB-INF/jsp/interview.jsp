@@ -7,27 +7,62 @@
 
 <style>
 
+body{
+font-family:Arial;
+background:#f4f6f9;
+margin:0;
+}
+
 .container{
-width:50%;
+width:45%;
 margin:auto;
-margin-top:40px;
+margin-top:50px;
+}
+
+.card{
+background:white;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.15);
+overflow:hidden;
+}
+
+.header{
+background:#0073e6;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
 }
 
 .table{
 width:100%;
 border-collapse:collapse;
-background:white;
-box-shadow:0 3px 8px rgba(0,0,0,0.2);
+}
+
+.table tr:nth-child(even){
+background:#f9f9f9;
 }
 
 .table td{
-padding:12px;
-border-bottom:1px solid #ddd;
+padding:14px;
+font-size:15px;
+border-bottom:1px solid #eee;
 }
 
-.title{
-text-align:center;
-margin-bottom:20px;
+.label{
+font-weight:bold;
+color:#444;
+width:40%;
+}
+
+.value{
+color:#222;
+}
+
+.highlight{
+color:#28a745;
+font-weight:bold;
 }
 
 </style>
@@ -38,51 +73,57 @@ margin-bottom:20px;
 
 <div class="container">
 
-<h2 class="title">Interview Details</h2>
+<div class="card">
+
+<div class="header">
+Interview Details
+</div>
 
 <table class="table">
 
 <tr>
-<td><b>Username</b></td>
-<td>${username}</td>
+<td class="label">Username</td>
+<td class="value">${username}</td>
 </tr>
 
 <tr>
-<td><b>Company</b></td>
-<td>${company}</td>
+<td class="label">Company</td>
+<td class="value">${company}</td>
 </tr>
 
 <tr>
-<td><b>Vacancies</b></td>
-<td>${vacancies}</td>
+<td class="label">Vacancies</td>
+<td class="value">${vacancies}</td>
 </tr>
 
 <tr>
-<td><b>Salary</b></td>
-<td>${salary}</td>
+<td class="label">Salary</td>
+<td class="value highlight">₹ ${salary}</td>
 </tr>
 
 <tr>
-<td><b>Job Post</b></td>
-<td>${jobpost}</td>
+<td class="label">Job Post</td>
+<td class="value">${jobpost}</td>
 </tr>
 
 <tr>
-<td><b>Location</b></td>
-<td>${location}</td>
+<td class="label">Location</td>
+<td class="value">${location}</td>
 </tr>
 
 <tr>
-<td><b>Interview Date</b></td>
-<td>${date}</td>
+<td class="label">Interview Date</td>
+<td class="value">${date}</td>
 </tr>
 
 <tr>
-<td><b>Interview Time</b></td>
-<td>${time}</td>
+<td class="label">Interview Time</td>
+<td class="value">${time}</td>
 </tr>
 
 </table>
+
+</div>
 
 </div>
 

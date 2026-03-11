@@ -18,12 +18,11 @@ public class DataLoaderController {
     @GetMapping("/generatejobs")
     public String generateJobs(){
 
-        try(Connection con = dataSource.getConnection()){
+        try(Connection con = dataSource.getConnection();
+            PreparedStatement ps = con.prepareStatement(
+            "insert into jobs(company,location,skills,salary,type,description,logo) values(?,?,?,?,?,?,?)")){
 
             for(int i=1;i<=100;i++){
-
-                PreparedStatement ps = con.prepareStatement(
-                "insert into jobs(company,location,skills,salary,type,description,logo) values(?,?,?,?,?,?,?)");
 
                 ps.setString(1,"Company"+i);
                 ps.setString(2,"Bangalore");

@@ -29,35 +29,54 @@ public class JobController {
     @Autowired
     EmailServices emailService;
 
-    // APPLY JOB + RESUME UPLOAD
+    // APPLY JOB
     @PostMapping("/applyjob")
-    public String applyJob(
-            @RequestParam int id,
-            @RequestParam("resume") MultipartFile file,
-            HttpSession session) {
+    public String applyJob(@RequestParam int id,
+                           @RequestParam("resume") MultipartFile file,
+                           HttpSession session) {
 
         String username = (String) session.getAttribute("username");
 
-        if (username == null) {
-            return "login";
+        if(username == null){
+            return "redirect:/login";
         }
 
-        String filename = file.getOriginalFilename();
+        if(file.isEmpty()){
+            return "redirect:/jobdetails?id=" + id;
+        }
+
         String email = null;
 
-        try (Connection con = dataSource.getConnection()) {
+        try(Connection con = dataSource.getConnection()){
 
-            String path = "C:/uploads/resumes/";
+            // Prevent duplicate applications
+            PreparedStatement check = con.prepareStatement(
+            "select * from applications where username=? and job_id=?");
+
+            check.setString(1, username);
+            check.setInt(2, id);
+
+            ResultSet rsCheck = check.executeQuery();
+
+            if(rsCheck.next()){
+                return "redirect:/jobdetails?id=" + id;
+            }
+
+            // Resume upload
+            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+
+            String path = System.getProperty("user.dir") + "/uploads/resumes/";
+
             File dir = new File(path);
 
-            if (!dir.exists()) {
+            if(!dir.exists()){
                 dir.mkdirs();
             }
 
             file.transferTo(new File(path + filename));
 
             PreparedStatement ps = con.prepareStatement(
-                    "insert into applications(username,job_id,status,resume) values(?,?,?,?)");
+            "insert into applications(username,job_id,status,resume) values(?,?,?,?)");
 
             ps.setString(1, username);
             ps.setInt(2, id);
@@ -66,27 +85,29 @@ public class JobController {
 
             ps.executeUpdate();
 
+            // Get user email
             PreparedStatement ps2 =
-                    con.prepareStatement("select email from users where username=?");
+            con.prepareStatement("select email from users where username=?");
 
             ps2.setString(1, username);
 
             ResultSet rs = ps2.executeQuery();
 
-            if (rs.next()) {
+            if(rs.next()){
                 email = rs.getString("email");
             }
 
-        } catch (Exception e) {
+        }catch(Exception e){
             e.printStackTrace();
         }
 
-        if (email != null) {
+        // Send confirmation email
+        if(email != null){
 
-            String subject = "Job Application Submitted";
-            String message = "Your job application has been submitted successfully.";
-
-            emailService.sendEmail(email, subject, message);
+            emailService.sendEmail(
+            email,
+            "Job Application Submitted",
+            "Your job application has been submitted successfully.");
         }
 
         return "redirect:/joblist";
@@ -94,17 +115,18 @@ public class JobController {
 
     // JOB LIST
     @GetMapping("/joblist")
-    public String jobList(Model model) {
+    public String jobList(Model model){
 
         List<Job> jobs = new ArrayList<>();
 
-        try (Connection con = dataSource.getConnection();
-             PreparedStatement ps = con.prepareStatement("select * from jobs");
-             ResultSet rs = ps.executeQuery()) {
+        try(Connection con = dataSource.getConnection();
+            PreparedStatement ps =
+            con.prepareStatement("select * from jobs limit 20");
+            ResultSet rs = ps.executeQuery()){
 
-            while (rs.next()) {
+            while(rs.next()){
 
-                Job job = new Job(
+                jobs.add(new Job(
                         rs.getInt("id"),
                         rs.getString("company"),
                         rs.getString("location"),
@@ -113,34 +135,33 @@ public class JobController {
                         rs.getString("description"),
                         rs.getString("logo"),
                         rs.getString("type")
-                );
-
-                jobs.add(job);
+                ));
             }
 
-        } catch (Exception e) {
+        }catch(Exception e){
             e.printStackTrace();
         }
 
         model.addAttribute("jobs", jobs);
+
         return "joblist";
     }
 
     // JOB DETAILS
     @GetMapping("/jobdetails")
-    public String jobDetails(@RequestParam int id, Model model) {
+    public String jobDetails(@RequestParam int id, Model model){
 
         Job job = null;
 
-        try (Connection con = dataSource.getConnection();
-             PreparedStatement ps =
-                     con.prepareStatement("select * from jobs where id=?")) {
+        try(Connection con = dataSource.getConnection();
+            PreparedStatement ps =
+            con.prepareStatement("select * from jobs where id=?")){
 
             ps.setInt(1, id);
 
             ResultSet rs = ps.executeQuery();
 
-            if (rs.next()) {
+            if(rs.next()){
 
                 job = new Job(
                         rs.getInt("id"),
@@ -154,7 +175,7 @@ public class JobController {
                 );
             }
 
-        } catch (Exception e) {
+        }catch(Exception e){
             e.printStackTrace();
         }
 
@@ -165,23 +186,24 @@ public class JobController {
 
     // SEARCH JOBS
     @GetMapping("/searchjobs")
-    public String searchJobs(@RequestParam String keyword, Model model) {
+    public String searchJobs(@RequestParam String keyword, Model model){
 
         List<Job> jobs = new ArrayList<>();
 
-        try (Connection con = dataSource.getConnection();
-             PreparedStatement ps =
-             con.prepareStatement(
-             "select * from jobs where company like ? or skills like ?")) {
+        try(Connection con = dataSource.getConnection();
+            PreparedStatement ps =
+            con.prepareStatement(
+            "select * from jobs where company like ? or skills like ? or location like ?")){
 
-            ps.setString(1, "%" + keyword + "%");
-            ps.setString(2, "%" + keyword + "%");
+            ps.setString(1,"%"+keyword+"%");
+            ps.setString(2,"%"+keyword+"%");
+            ps.setString(3,"%"+keyword+"%");
 
             ResultSet rs = ps.executeQuery();
 
-            while (rs.next()) {
+            while(rs.next()){
 
-                Job job = new Job(
+                jobs.add(new Job(
                         rs.getInt("id"),
                         rs.getString("company"),
                         rs.getString("location"),
@@ -190,12 +212,10 @@ public class JobController {
                         rs.getString("description"),
                         rs.getString("logo"),
                         rs.getString("type")
-                );
-
-                jobs.add(job);
+                ));
             }
 
-        } catch (Exception e) {
+        }catch(Exception e){
             e.printStackTrace();
         }
 
@@ -206,21 +226,21 @@ public class JobController {
 
     // FILTER BY SKILL
     @GetMapping("/filter")
-    public String filterJobs(@RequestParam String skill, Model model) {
+    public String filterJobs(@RequestParam String skill, Model model){
 
         List<Job> jobs = new ArrayList<>();
 
-        try (Connection con = dataSource.getConnection();
-             PreparedStatement ps =
-             con.prepareStatement("select * from jobs where skills=?")) {
+        try(Connection con = dataSource.getConnection();
+            PreparedStatement ps =
+            con.prepareStatement("select * from jobs where skills like ?")){
 
-            ps.setString(1, skill);
+            ps.setString(1,"%"+skill+"%");
 
             ResultSet rs = ps.executeQuery();
 
-            while (rs.next()) {
+            while(rs.next()){
 
-                Job job = new Job(
+                jobs.add(new Job(
                         rs.getInt("id"),
                         rs.getString("company"),
                         rs.getString("location"),
@@ -229,12 +249,10 @@ public class JobController {
                         rs.getString("description"),
                         rs.getString("logo"),
                         rs.getString("type")
-                );
-
-                jobs.add(job);
+                ));
             }
 
-        } catch (Exception e) {
+        }catch(Exception e){
             e.printStackTrace();
         }
 
@@ -259,7 +277,7 @@ public class JobController {
 
             while(rs.next()){
 
-                Job job = new Job(
+                jobs.add(new Job(
                         rs.getInt("id"),
                         rs.getString("company"),
                         rs.getString("location"),
@@ -268,9 +286,7 @@ public class JobController {
                         rs.getString("description"),
                         rs.getString("logo"),
                         rs.getString("type")
-                );
-
-                jobs.add(job);
+                ));
             }
 
         }catch(Exception e){
@@ -282,12 +298,6 @@ public class JobController {
         return "joblist";
     }
 
-    // ADD JOB PAGE
-    @GetMapping("/addjob")
-    public String addJobPage() {
-        return "addjob";
-    }
-
     // SAVE JOB
     @GetMapping("/savejob")
     public String saveJob(@RequestParam int id, HttpSession session){
@@ -295,13 +305,26 @@ public class JobController {
         String username = (String)session.getAttribute("username");
 
         if(username == null){
-            return "login";
+            return "redirect:/login";
         }
 
-        try(Connection con = dataSource.getConnection();
+        try(Connection con = dataSource.getConnection()){
+
+            PreparedStatement check = con.prepareStatement(
+            "select * from saved_jobs where username=? and job_id=?");
+
+            check.setString(1, username);
+            check.setInt(2, id);
+
+            ResultSet rs = check.executeQuery();
+
+            if(rs.next()){
+                return "redirect:/savedjobs";
+            }
+
             PreparedStatement ps =
             con.prepareStatement(
-            "insert into saved_jobs(username,job_id) values(?,?)")){
+            "insert into saved_jobs(username,job_id) values(?,?)");
 
             ps.setString(1, username);
             ps.setInt(2, id);
@@ -334,7 +357,7 @@ public class JobController {
 
             while(rs.next()){
 
-                Job job = new Job(
+                jobs.add(new Job(
                         rs.getInt("id"),
                         rs.getString("company"),
                         rs.getString("location"),
@@ -343,9 +366,7 @@ public class JobController {
                         rs.getString("description"),
                         rs.getString("logo"),
                         rs.getString("type")
-                );
-
-                jobs.add(job);
+                ));
             }
 
         }catch(Exception e){
@@ -366,10 +387,10 @@ public class JobController {
         try(Connection con = dataSource.getConnection();
             PreparedStatement ps =
             con.prepareStatement(
-            "delete from saved_jobs where job_id=? and username=?")){
+            "delete from saved_jobs where username=? and job_id=?")){
 
-            ps.setInt(1, id);
-            ps.setString(2, username);
+            ps.setString(1, username);
+            ps.setInt(2, id);
 
             ps.executeUpdate();
 
@@ -399,7 +420,7 @@ public class JobController {
 
             while(rs.next()){
 
-                Job job = new Job(
+                jobs.add(new Job(
                         rs.getInt("id"),
                         rs.getString("company"),
                         rs.getString("location"),
@@ -408,9 +429,7 @@ public class JobController {
                         rs.getString("description"),
                         rs.getString("logo"),
                         rs.getString("type")
-                );
-
-                jobs.add(job);
+                ));
             }
 
         }catch(Exception e){

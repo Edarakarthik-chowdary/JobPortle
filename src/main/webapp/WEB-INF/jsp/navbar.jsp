@@ -1,28 +1,74 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+
+<%
+String username = (String) session.getAttribute("username");
+String initial = "";
+if(username != null && username.length() > 0){
+initial = username.substring(0,1).toUpperCase();
+}
+%>
+
 <link rel="stylesheet"
 href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 
 <style>
 
 .navbar{
-background: linear-gradient(90deg,#0f2027,#203a43,#2c5364);
+background: linear-gradient(90deg,#141e30,#243b55);
+padding:12px 0;
+box-shadow:0 3px 10px rgba(0,0,0,0.3);
 }
 
 .navbar-brand{
+font-size:24px;
 font-weight:bold;
-font-size:22px;
+letter-spacing:1px;
+color:#00e5ff !important;
 }
 
 .nav-link{
 color:white !important;
-margin-right:10px;
+margin-right:15px;
+font-weight:500;
+transition:0.3s;
 }
 
 .nav-link:hover{
 color:#00e5ff !important;
+transform:translateY(-1px);
 }
 
 .search-box{
-width:220px;
+width:240px;
+border-radius:20px;
+padding-left:15px;
+}
+
+.btn-info{
+border-radius:20px;
+}
+
+.profile-circle{
+width:35px;
+height:35px;
+border-radius:50%;
+background:#00e5ff;
+color:black;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+margin-right:6px;
+}
+
+.dropdown-toggle{
+display:flex;
+align-items:center;
+}
+
+.dropdown-menu{
+border-radius:10px;
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
 }
 
 </style>
@@ -68,13 +114,13 @@ data-bs-target="#navbarNav">
 
 </ul>
 
-<!-- Search bar -->
+<!-- SEARCH -->
 
 <form class="d-flex me-3" action="/searchjobs">
 
 <input class="form-control search-box me-2"
 type="search"
-placeholder="Search jobs"
+placeholder="Search jobs..."
 name="keyword">
 
 <button class="btn btn-info">Search</button>
@@ -83,26 +129,62 @@ name="keyword">
 
 <ul class="navbar-nav">
 
+<% if(username != null){ %>
+
+<li class="nav-item dropdown">
+
+<a class="nav-link dropdown-toggle"
+href="#"
+role="button"
+data-bs-toggle="dropdown">
+
+<div class="profile-circle">
+<%=initial%>
+</div>
+
+<%=username%>
+
+</a>
+
+<ul class="dropdown-menu dropdown-menu-end">
+
+<li>
+<a class="dropdown-item" href="/savedjobs">
+Saved Jobs
+</a>
+</li>
+
+<li>
+<a class="dropdown-item" href="/myapplications">
+My Applications
+</a>
+</li>
+
+<li><hr class="dropdown-divider"></li>
+
+<li>
+<a class="dropdown-item text-danger" href="/logout">
+Logout
+</a>
+</li>
+
+</ul>
+
+</li>
+
+<% } else { %>
+
 <li class="nav-item">
 <a class="nav-link" href="/login">Login</a>
 </li>
 
-<li class="nav-item">
-<a class="nav-link" href="/logout">Logout</a>
-</li>
+<% } %>
 
 </ul>
 
 </div>
 
 </div>
-
-<li class="nav-item">
-<a class="nav-link" href="/savedjobs">Saved Jobs</a>
-</li>
-<li class="nav-item">
-<a class="nav-link" href="/myapplications">My Applications</a>
-</li>
 
 </nav>
 

@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class DashBoardController {
-	@Autowired
+
+    @Autowired
     DataSource dataSource;
 
     @GetMapping("/dashboard")
@@ -25,23 +26,9 @@ public class DashBoardController {
 
         try (Connection con = dataSource.getConnection()) {
 
-            PreparedStatement ps1 = con.prepareStatement("select count(*) from jobs");
-            ResultSet rs1 = ps1.executeQuery();
-            if (rs1.next()) {
-                totalJobs = rs1.getInt(1);
-            }
-
-            PreparedStatement ps2 = con.prepareStatement("select count(*) from applications");
-            ResultSet rs2 = ps2.executeQuery();
-            if (rs2.next()) {
-                totalApplications = rs2.getInt(1);
-            }
-
-            PreparedStatement ps3 = con.prepareStatement("select count(*) from users");
-            ResultSet rs3 = ps3.executeQuery();
-            if (rs3.next()) {
-                totalUsers = rs3.getInt(1);
-            }
+            totalJobs = getCount(con, "select count(*) from jobs");
+            totalApplications = getCount(con, "select count(*) from applications");
+            totalUsers = getCount(con, "select count(*) from users");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,4 +41,16 @@ public class DashBoardController {
         return "dashboard";
     }
 
+    private int getCount(Connection con, String query) throws Exception {
+
+        try (PreparedStatement ps = con.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+
+        return 0;
+    }
 }

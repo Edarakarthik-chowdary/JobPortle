@@ -22,35 +22,41 @@ public class LoginController {
 
     @PostMapping("/loginuser")
     public String loginUser(
-    @RequestParam String username,
-    @RequestParam String password,
-    @RequestParam(required=false) String remember,
-    HttpSession session,
-    Model model){
+            @RequestParam String username,
+            @RequestParam String password,
+            @RequestParam(required=false) String remember,
+            HttpSession session,
+            Model model){
 
-    try(Connection con = dataSource.getConnection();
-    PreparedStatement ps =
-    con.prepareStatement(
-    "select * from users where username=? and password=?")){
+        try(Connection con = dataSource.getConnection();
+            PreparedStatement ps =
+            con.prepareStatement(
+            "select * from users where username=? and password=?")){
 
-    ps.setString(1, username);
-    ps.setString(2, password);
+            ps.setString(1, username);
+            ps.setString(2, password);
 
-    ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
-    if(rs.next()){
+            if(rs.next()){
 
-    session.setAttribute("username", username);
+                // store session
+                session.setAttribute("username", username);
 
-    return "redirect:/joblist";
-    }
+                // optional remember login
+                if(remember != null){
+                    session.setMaxInactiveInterval(60*60*24); // 24 hours
+                }
 
-    }catch(Exception e){
-    e.printStackTrace();
-    }
+                return "redirect:/joblist";
+            }
 
-    model.addAttribute("error","Invalid username or password");
+        }catch(Exception e){
+            e.printStackTrace();
+        }
 
-    return "login";
+        model.addAttribute("error","Invalid username or password");
+
+        return "login";
     }
 }

@@ -33,6 +33,16 @@ href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 </div>
 
 <div class="mb-3">
+<label>Company Type</label>
+<select name="companyType" class="form-control">
+<option value="MNC">MNC</option>
+<option value="Startup">Startup</option>
+<option value="Product">Product Based</option>
+<option value="Service">Service Based</option>
+</select>
+</div>
+
+<div class="mb-3">
 <label>Salary</label>
 <input type="number" name="salary" class="form-control">
 </div>

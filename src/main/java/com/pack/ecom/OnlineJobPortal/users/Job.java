@@ -9,11 +9,10 @@ public class Job {
     private int salary;
     private String description;
     private String logo;
-    private String type;   // NEW
-    
-    public Job(){}
+    private String type;
 
-    // FULL CONSTRUCTOR
+    public Job() {}
+
     public Job(int id, String company, String location, String skills,
                int salary, String description, String logo, String type) {
 
@@ -93,4 +92,15 @@ public class Job {
         this.type = type;
     }
 
+    @Override
+    public String toString() {
+        return "Job{" +
+                "id=" + id +
+                ", company='" + company + '\'' +
+                ", location='" + location + '\'' +
+                ", skills='" + skills + '\'' +
+                ", salary=" + salary +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }

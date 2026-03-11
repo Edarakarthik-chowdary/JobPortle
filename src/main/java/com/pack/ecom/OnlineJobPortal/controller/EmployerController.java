@@ -7,9 +7,9 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class EmployerController {
@@ -17,38 +17,59 @@ public class EmployerController {
     @Autowired
     DataSource dataSource;
 
+    // OPEN POST JOB PAGE
     @GetMapping("/postjob")
-    public String postJobPage() {
+    public String postJobPage(HttpSession session) {
+
+        if(session.getAttribute("username")==null){
+            return "redirect:/login";
+        }
+
         return "postjob";
     }
 
+    // SAVE JOB
     @PostMapping("/postjob")
     public String saveJob(@RequestParam String company,
                           @RequestParam String location,
                           @RequestParam String skills,
-                          @RequestParam int salary) {
+                          @RequestParam int salary,
+                          @RequestParam String type,
+                          @RequestParam(required=false) String description,
+                          @RequestParam(required=false) String logo,
+                          HttpSession session) {
 
-        try {
+        if(session.getAttribute("username")==null){
+            return "redirect:/login";
+        }
 
-            Connection con = dataSource.getConnection();
+        // Default values
+        if(description == null || description.isEmpty()){
+            description = "Job opportunity at " + company;
+        }
 
-            PreparedStatement ps =
-            con.prepareStatement("insert into jobs(company,location,skills,salary) values(?,?,?,?)");
+        if(logo == null || logo.isEmpty()){
+            logo = "default.png";
+        }
+
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement ps = con.prepareStatement(
+             "insert into jobs(company,location,skills,salary,type,description,logo) values(?,?,?,?,?,?,?)")) {
 
             ps.setString(1, company);
             ps.setString(2, location);
             ps.setString(3, skills);
             ps.setInt(4, salary);
+            ps.setString(5, type);
+            ps.setString(6, description);
+            ps.setString(7, logo);
 
             ps.executeUpdate();
-
-            ps.close();
-            con.close();
 
         } catch(Exception e){
             e.printStackTrace();
         }
 
-        return "redirect:/jobList";
+        return "redirect:/joblist";
     }
 }
